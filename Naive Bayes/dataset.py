@@ -8,7 +8,7 @@ import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
 import numpy as np
 class Dataset():
-    def __init__(self):
+    def __init__(self,num_of_samples = 0):
         # Load the dataset
         file_path = './spam.csv'  # Replace with the actual path to your spam.csv file
         self.data = pd.read_csv(file_path, encoding='latin-1')
@@ -21,20 +21,19 @@ class Dataset():
         
         # Slice the first 100 rows
         self.table = self.data.head(1)
-        self.truncate(100)
+        self.truncate(num_of_samples)
     
     def truncate(self,row):
         self.table = self.data.head(row)
-        vectorizer = CountVectorizer(stop_words='english')
-        temp = vectorizer.fit_transform(self.table['text']).toarray()
+        self.vectorizer = CountVectorizer(stop_words='english')
+        temp = self.vectorizer.fit_transform(self.table['text']).toarray()
         self.table = self.table.drop(['text'],axis =1)
         self.table = self.table.to_numpy()
         self.table = np.concatenate((self.table,temp),axis = 1)
-        self.feature_names = vectorizer.get_feature_names_out()
+        self.feature_names = self.vectorizer.get_feature_names_out()
     def get_data(self):
-        print(self.table)
         return self.table
     
-    def feature(self):
-        return self.feature_names
+    def transfrom_to_bow(self,text):
+        return self.vectorizer.transform([text]).toarray()
 

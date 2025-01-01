@@ -22,25 +22,37 @@ from dataset import Dataset
 import numpy as np
 class NaiveBayes():
     def __init__(self,data,label_index,atributes_index):
-        print (f"init called")
+        print (f"init called with data len = {data.shape[0]}" )
         self.prob_table = {}
         self.create_probability_table(data,label_index,atributes_index)
        
     def create_probability_table(self,data,label_index,atributes_index):
+        """" Áp dụng thêm laplace smoothing cho Naive Bayes"""
         unique_labels = np.unique(data[:,label_index]) # xem data có bao nhiêu nhãn
+        training_length = data.shape[0]
         for label in unique_labels:
             label_table = data[data[:, label_index] == label][:, atributes_index]
             num_of_samples = label_table.shape[0]
-            print(f"label: {label},has num {num_of_samples} ")
-            self.prob_table[label] = np.sum(label_table,axis =1)
-            self.prob_table[label] /= num_of_samples
+            print(f" sample for {label} : {num_of_samples}")
+            self.prob_table[label] = np.sum(label_table,axis =0)
+            self.prob_table[label] = (self.prob_table[label]+1) /(num_of_samples+1*training_length)
         return self.prob_table
-        
+    def predict(self,data,atributes_index):
+        result = {}   
+        for label in self.prob_table: 
+            label_result = 1 
+            for i in atributes_index:
+                if data[i] > 0: 
+                    label_result *= self.prob_table[label][i]
+            result[label]=label_result
+        max_label = max(result, key=result.get)
+        return max_label
 
+# dataset = Dataset(5000)
+# data = dataset.get_data()
+# index_count = data.shape[1]
+# atributes_index = np.arange(1,index_count)
+# label_index = np.array(0)
+# classifier = NaiveBayes(data,label_index,atributes_index)
+# print(classifier.predict(data[9],label_index,atributes_index))
 
-dataset = Dataset()
-data = dataset.get_data()
-index_count = data.shape[1]
-atributes_index = np.arange(1,index_count)
-label_index = np.array(0)
-classifier = NaiveBayes(data,label_index,atributes_index)
