@@ -57,10 +57,10 @@ class Dataset():
             return self.solution_4        
 
 
-ds= Dataset()
-while True:
-    a = int(input('nhap so de xuat test :' ))
-    if( a ==0): 
-        break
-    print(ds.get_data(a))
-    print(ds.get_label(a))
+# ds= Dataset()
+# while True:
+#     a = int(input('nhap so de xuat test :' ))
+#     if( a ==0): 
+#         break
+#     print(ds.get_data(a))
+#     print(ds.get_label(a))
