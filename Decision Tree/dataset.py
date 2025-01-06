@@ -11,5 +11,5 @@ class Dataset():
         self.wine.data = df.to_numpy()
         
  
-    def data(self):
+    def get_data(self):
         return self.wine

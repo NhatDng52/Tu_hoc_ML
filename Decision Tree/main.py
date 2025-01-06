@@ -7,9 +7,9 @@ class Main():
     def __init__(self):
         self.dataset = Dataset()
         self.visualize = Visualize()
-        label_index = len(self.dataset.data().feature_names)-1
+        label_index = len(self.dataset.get_data().feature_names)-1
         atribute_index = np.arange(0, label_index)
-        self.decision_tree_ID3 = DecisionTree(self.dataset.data().data,label_index,atribute_index)
+        self.decision_tree_ID3 = DecisionTree(self.dataset.get_data().data,label_index,atribute_index)
     def run(self):
         self.visualize.visualize_data(self.dataset.data())
         print(f"toal node = {self.decision_tree_ID3.call}")
