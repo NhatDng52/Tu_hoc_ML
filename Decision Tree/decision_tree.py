@@ -28,10 +28,9 @@ class DecisionTree():
         return root    
     def classify(self,data):
         curr = self.root
-        while True :    # su dung while true khong rang buoc co dinh vi co cac cay co chieu dai khac nhau
+        while curr.child :    # su dung while true khong rang buoc co dinh vi co cac cay co chieu dai khac nhau
             curr = curr.child[list(curr.edge_value).index(data[curr.field])]
-            if(not curr.child):
-                return curr.field
+        return curr.field
     def print_tree(self, node=None, indent="",edge=None, indx = 0):
         if node is None:
             node = self.root
