@@ -25,6 +25,7 @@ class Layer():
         return out
     def parameters(self):
         return [param for neuron in self.neurons for param in neuron.parameters()]
+    
 class MLP():
     def __init__(self,nin,nouts,activation_func = None):
         #nin will be number of that pass to this MLP , nouts is LIST of hidenlayers and end with output

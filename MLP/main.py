@@ -15,8 +15,13 @@ print("label la", label)
 
 loss = sum((i - j) ** 2 for i,j in zip(predict,label))
 loss 
-# ở đây nó k tạo ra đối tượng biến thông thường , mà sẽ tạo ra đối tượng tensor , thư viện đã overwrite phép cộng nhân mũ ..., đối tượng có các phương thức như backward, grad, ... để tính toán gradient descent
+# ở đây nó k tạo ra đối tượng biến thông thường , mà sẽ tạo ra đối tượng tensor , thư viện đã overwrite phép cộng nhân mũ ..., đối tượng được tạo ra cũng có các phương thức như backward, grad, ... để tính toán gradient descent
 loss.backward()
 for i, weight in enumerate(MLP.layers[0].neurons[0].w):
     print(f"grad for weight {i}:", weight.grad)
 print(MLP.parameters())
+
+for p in MLP.parameters():
+    if p.grad is not None:
+        p.data -= 0.01 * p.grad.data
+        p.grad = None

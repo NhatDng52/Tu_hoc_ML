@@ -18,7 +18,7 @@ class Dataset():
 
     def get_label(self):
         return self.target
-
+ 
 # dataset = Dataset()
 # data = dataset.get_data()
 # data['target'] = dataset.get_label()
