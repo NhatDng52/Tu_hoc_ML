@@ -1,39 +1,84 @@
+from abc import ABC, abstractmethod
 from torch import tensor
+from torch import stack  # dùng stack thay vì cho nó vào tensor mới sẽ ngăn việc grad bị mất
 import random
+from utils import create_activation_function
+from layer import FC_Layer
+##---------------------------BEGIN ABSTRACT CLASS-------------------------------------------------
 
 
-# Ở đây ta sẽ làm việc với tensor thay vì numpy , tensor là đơn vị tính toán cơ bản của DL, nó hỗ trợ GPU , nguyên nhân khiến Deep Learning bùng nổ lại ở những năm gần đây, ngoài ra nó còn support các chức năng thêm (như grad, thứ k thể thiếu của back prog )
-class Neuron():
-    def __init__(self,nin,activation_func = None):
-        self.w = [tensor(random.uniform(-1,1),requires_grad= True) for _ in range(nin)]
-        self.b = tensor(random.uniform(-1,1),requires_grad= True)
-        self.activation_func = activation_func
-    def __call__(self,x):
-        # x is list of inputs , and we have list of weights
-        out =  sum((w*x_i for w,x_i in zip(self.w,x)) , self.b)
-        out = self.activation_func(out) if self.activation_func else out
-        return out
+class Model(ABC):
+    @abstractmethod
+    def __call__(self, x):
+        pass
+
+    @abstractmethod
     def parameters(self):
-        return self.w+ [self.b]
-
-class Layer():
-    def __init__(self,nin,nout,activation_func = None):
-        self.neurons = [Neuron(nin,activation_func) for _ in range(nout)]
-        self.activation_func = activation_func
-    def __call__(self,x):
-        out = [neuron(x) for neuron in self.neurons]
-        return out
-    def parameters(self):
-        return [param for neuron in self.neurons for param in neuron.parameters()]
+        pass
     
+    @abstractmethod
+    def __str__(self):
+        pass
+
+##---------------------------END ABSTRACT CLASS-------------------------------------------------
+
+
+##---------------------------BEGIN MODEL-------------------------------------------------
+
 class MLP():
-    def __init__(self,nin,nouts,activation_func = None):
+    def __init__(self,nin,nouts, activation_func = None,output_activation_func = None):
         #nin will be number of that pass to this MLP , nouts is LIST of hidenlayers and end with output
         size = [nin] + nouts
-        self.layers = [Layer(size[i],size[i+1],activation_func) for i in range(len(nouts))]
+        self.layers = []
+        activation_func = create_activation_function(activation_func)
+        end_activation_func = create_activation_function(output_activation_func)                    
+            
+        for i in range(len(nouts)-1):
+            self.layers.append(FC_Layer(size[i],size[i+1]))
+        if activation_func:
+            self.layers.append(activation_func)
+
+        self.layers.append(FC_Layer(size[-2],size[-1]))
+        if end_activation_func:
+            self.layers.append(end_activation_func)
+
+            
     def __call__(self,x):
-        for layer in self.layers:
-            x = layer(x)
-        return x[0] if len(x) == 1 else x
+        def process_1_input(x):    
+            for layer in self.layers:
+                x = layer(x)
+            if isinstance(x, list):
+                return stack([xi for xi in x])  # Dùng torch.stack để kết hợp tensor và duy trì gradient
+            return x  
+        if isinstance(x,list):
+            return stack([process_1_input(i) for i in x])
+        else:
+            return process_1_input(x)
+    
     def parameters(self):
-        return [param for layer in self.layers for param in layer.parameters()]
+        params = []
+        for layer in self.layers:
+            params += layer.parameters() if layer.parameters() else []
+        return params
+    
+    def __str__(self):
+        Layer_list = [str(layer) for layer in self.layers]
+        return "MLP with layers:\n" + "\n".join(Layer_list)
+    
+# class RNN():
+#     def __init__(self,nin,hidden,nouts, activation_func = None,output_layer = None,hidden_size = 10):
+#         activation_func = create_activation_function(activation_func)
+        
+#         self.hidden_layer = FC_Layer(hidden,hidden,activation_func)
+#         self.output_layer = FC_Layer(hidden,nouts,output_layer)
+#         self.input_layer = FC_Layer(nin,hidden,activation_func)
+        
+#         # cần một biến lưu bộ nhớ 
+#         self.ht = None
+#     def __call__(self,x):
+#     def parameter(self):
+#         return [self.weigh_xh,self.weigh_hh,self.weigh_hy]
+#     def __str__(self):
+#         return f"RNN with weigh_hh \n{self.weigh_hh}\n and weigh_xh \n{self.weigh_xh}\n and weigh_hy \n{self.weigh_hy}\n"
+    
+    

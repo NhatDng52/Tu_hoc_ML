@@ -7,7 +7,7 @@ class Dataset():
     def __init__(self):
         self.data, self.target = load_iris(return_X_y=True, as_frame=True)
         
-        self.data, self.target = self.data.head(10), self.target.head(10)
+        self.data, self.target = self.data.head(20), self.target.head(20)
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
             self.data, self.target, test_size=0.2, random_state=42, stratify=self.target)
         # print("train la", self.X_train)

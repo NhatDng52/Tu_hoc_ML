@@ -1,27 +1,90 @@
 from dataset import Dataset
-from nn import MLP
+from nn import*
 import torch
-
+import torch.nn.functional as F
 dataset = Dataset()
 data = dataset.get_data()
-data['target'] = dataset.get_label()
-input = torch.tensor(dataset.X_train.to_numpy())
-#print("input la", input)
-MLP = MLP(4,[4,4,2,1])
-predict =[MLP(i) for i in input]
-print("predict la", predict)
-label = [torch.tensor(x) for x in dataset.y_train.to_numpy()]
-print("label la", label)
+from loss import MSELoss
+from optimizer import SGD
 
-loss = sum((i - j) ** 2 for i,j in zip(predict,label))
-loss 
-# ở đây nó k tạo ra đối tượng biến thông thường , mà sẽ tạo ra đối tượng tensor , thư viện đã overwrite phép cộng nhân mũ ..., đối tượng được tạo ra cũng có các phương thức như backward, grad, ... để tính toán gradient descent
-loss.backward()
-for i, weight in enumerate(MLP.layers[0].neurons[0].w):
-    print(f"grad for weight {i}:", weight.grad)
-print(MLP.parameters())
+#--------------------------------------------- Iris dataset------------------------------
+# data['target'] = dataset.get_label()
+# inputs = [torch.tensor(x) for x in dataset.X_train.to_numpy()]
+# labels = [torch.tensor(x) for x in dataset.y_train.to_numpy()]
+# # print("label la", labels)
+# labels = torch.stack([F.one_hot(label.long(), num_classes=3) for label in labels])
+#----------------------------------------------XOR dataset-----------------------------------------  
+# Tạo inputs cho XOR dataset (4 mẫu)
+inputs = [
+    torch.tensor([1.0, 1.0], dtype=torch.float64),
+    torch.tensor([1.0, 0.0], dtype=torch.float64),
+    torch.tensor([0.0, 1.0], dtype=torch.float64),
+    torch.tensor([0.0, 0.0], dtype=torch.float64)
+]
 
-for p in MLP.parameters():
-    if p.grad is not None:
-        p.data -= 0.01 * p.grad.data
-        p.grad = None
+labels = torch.tensor([
+    [0],  # [0, 0] -> 0
+    [1],  # [0, 1] -> 1
+    [1],  # [1, 0] -> 1
+    [0]   # [1, 1] -> 0
+], dtype=torch.int32)
+
+
+#------END XOR dataset
+model = MLP(2,[2,1], activation_func='relu', output_activation_func=None)
+optimizer = SGD(model.parameters(), lr=0.1)
+loss_fn = MSELoss()
+for epoch in range(100):
+    preds = model(inputs)
+    loss = loss_fn(preds, labels)
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
+    print("pred", preds)
+    print("loss", loss)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# # test dự đoán 
+# test_input = [torch.tensor(x) for x in dataset.X_test.to_numpy()]
+# test_labels = torch.stack([torch.tensor(x) for x in dataset.y_test.to_numpy()])
+
+# # test XOR
+# test_input = inputs
+# test_labels = labels
+
+# output = model(test_input)
+
+
+# print("label", test_labels)
+
+# # # Tìm chỉ số lớp với xác suất cao nhất trong output
+# _, predicted_classes = torch.max(output, dim=1)
+# print("pred",predicted_classes)
+# # # Tính độ chính xác bằng cách so sánh predicted_classes và test_labels
+# # correct = (predicted_classes == test_labels).sum().item()
+# # accuracy = correct / test_labels.size(0)
+
+# # print(f"Accuracy: {accuracy * 100:.2f}%")
