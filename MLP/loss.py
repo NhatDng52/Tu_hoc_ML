@@ -45,7 +45,7 @@ class CrossEntropyWithSoftmaxLoss(Loss):
             y_true = tensor(y_true)
         softmax_layer = Softmax()
         y_pred = softmax_layer(y_pred)
-        loss = sum(sum(-(y_true * y_pred.log()))) # sum đâu tiên sẽ tính loss theo dim 0 ( theo batch), sum thứ 2 sẽ tính loss theo dim 1 ( theo class)
+        loss = -(y_true * y_pred.log()).sum(dim=1).mean()  # Mean over the batch
         return loss
 
     def backward(self, y_pred, y_true):
