@@ -1,3 +1,8 @@
+
+import sys
+import os
+# Thêm thư mục chứa 'util.py' vào sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from dataset import Dataset
 from nn import*
 import torch
