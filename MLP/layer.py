@@ -20,9 +20,8 @@ class Layer(ABC):
 ##---------------------------BEGIN LAYER-------------------------------------------------
 
 class FC_Layer(Layer):
-    def __init__(self,nin,nout,activation_func = None):
-        self.neurons = [Neuron(nin,activation_func) for _ in range(nout)]
-        self.activation_func = activation_func
+    def __init__(self,nin,nout):
+        self.neurons = [Neuron(nin) for _ in range(nout)]
     def __call__(self,x):
             return self.forward(x)
     def parameters(self):
