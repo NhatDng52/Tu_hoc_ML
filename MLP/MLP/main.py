@@ -39,6 +39,9 @@ labels = torch.stack([F.one_hot(label.long(), num_classes=3) for label in labels
 print("inputs la", inputs)
 print("labels la", labels)
 
+inputs = inputs.to(torch.float32)
+labels = labels.to(torch.float32)
+
 model = MLP(4,[4,2,3], activation_func='relu')
 optimizer = SGD(model.parameters(), lr=0.01)
 loss_fn = CrossEntropyWithSoftmaxLoss()
@@ -46,6 +49,8 @@ for epoch in range(200):
     optimizer.zero_grad()
     output = model(inputs)
     # print("output la", output)
+    print("yes")
+    print("out requires_grad", output.requires_grad)
     loss = loss_fn(output, labels)
     loss.backward()
     # for param in model.parameters():
@@ -56,7 +61,7 @@ for epoch in range(200):
 #Prediction
 with torch.no_grad():
     data['target'] = dataset.get_label()
-    inputs = torch.tensor([x for x in dataset.X_test.to_numpy()])
+    inputs = torch.tensor([x for x in dataset.X_test.to_numpy()]).to(torch.float32)
     labels = torch.tensor([torch.tensor(x) for x in dataset.y_test.to_numpy()])
     # print("label la", labels)
     # labels = torch.stack([F.one_hot(label.long(), num_classes=3) for label in labels])
