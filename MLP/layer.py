@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from unit import Neuron
-from torch import tensor,stack
+from torch import tensor,stack,matmul,cat,transpose
+import random
 class Layer(ABC):
     @abstractmethod
     def __call__(self, x):
@@ -21,17 +22,21 @@ class Layer(ABC):
 
 class FC_Layer(Layer):
     def __init__(self,nin,nout):
-        self.neurons = [Neuron(nin) for _ in range(nout)]
+        self.weight = tensor([[random.uniform(-1,1) for _ in range(nin)] for _ in range(nout)],requires_grad= True) # nout x nin
+        self.bias = tensor([random.uniform(-1,1) for _ in range(nout)],requires_grad= True) # nout
+        print("weight requires_grad",self.weight.requires_grad)
+        print("bias requires_grad",self.bias.requires_grad)
     def __call__(self,x):
             return self.forward(x)
     def parameters(self):
-            return [param for neuron in self.neurons for param in neuron.parameters()]
+        return [self.weight, self.bias]
     """đã có call rồi nhưng vẫn làm thêm foward, vì 2 cái có 2 cách gọi khác nhau, và foward thường để người dùng override"""
-    def forward(self, x):  
-        out = stack([neuron(x) for neuron in self.neurons])
+    def forward(self, x): 
+        out = matmul(x, transpose(self.weight,0,1)) + self.bias
+        print(" out requires_grad",out.requires_grad)
         return out
     def __str__(self):
-        return f"FC_Layer with {len(self.neurons)} neurons"
+        return f"FC_Layer with weight shape {self.weight.shape} and bias shape {self.bias.shape}"
 class ReLU(Layer):
     def __call__(self, x):
         return self.forward(x)
