@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from torch import tensor,is_tensor,zeros,ones
-from torch import stack  # dùng stack thay vì cho nó vào tensor mới sẽ ngăn việc grad bị mất
+from torch import stack,cat  # dùng stack thay vì cho nó vào tensor mới sẽ ngăn việc grad bị mất
 import random
 from utils import create_activation_function
 from layer import FC_Layer
@@ -34,8 +34,8 @@ class MLP():
             
         for i in range(len(nouts)):
             self.layers.append(FC_Layer(size[i],size[i+1]))
-        if activation_func and i != len(nouts)-1:
-            self.layers.append(activation_func)
+            if activation_func and i != len(nouts)-2:
+                self.layers.append(activation_func)
     def __call__(self,x):
         if not is_tensor(x):
             raise ValueError("Input must be a tensor. If input is a list, please wrap it in a tensor.")
@@ -44,11 +44,12 @@ class MLP():
                 x = layer(x)
             return x  
 
-        return stack([process_1_input(x[i]) for i in range(x.shape[0])])
+        return process_1_input(x)
     def parameters(self):
         params = []
         for layer in self.layers:
-            params += layer.parameters() if layer.parameters() else []
+            if layer.parameters() is not None:
+                params += layer.parameters()
         return params
     
     def __str__(self):
@@ -70,22 +71,36 @@ class RNN():
             
         self.hidden_state = None 
         self.hidden_size = hidden
-    def __call__(self,x):
+    def __call__(self,x,h=None):
         if not is_tensor(x):
             raise ValueError("Input must be a tensor. If input is a list, please wrap it in a tensor.")
-
-        def process_1_seq(x): 
-            self.hidden_state = zeros(self.hidden_size)
-
-            def process_1_input(x):
+        
+        if h is not None:
+            if not is_tensor(h):
+                raise ValueError("Hidden state must be a tensor. If input is a list, please wrap it in a tensor.")
+            if h.shape[0] != x.shape[0]:
+                raise ValueError("Hidden state must have the same batch size as input.")
+            self.hidden_state = h
+        else:
+            self.hidden_state = zeros(x.shape[0],self.hidden_size)
+        def process_1_seq(x,h_idx): 
+            def process_1_input(x,h_idx):
                 if len(self.hidden_layer) == 1:
-                    self.hidden_state = self.input_layer(x) + self.hidden_layer[0](self.hidden_state)
+                    new_hidden = self.input_layer(x) + self.hidden_layer[0](self.hidden_state[h_idx])
+                    self.hidden_state = self.hidden_state.clone()
+                    self.hidden_state[h_idx] = new_hidden
                 else:
-                    self.hidden_state = self.hidden_layer[1](self.input_layer(x) + self.hidden_layer[0](self.hidden_state))
-                out = self.output_layer(self.hidden_state)
+                    tmp = self.input_layer(x) + self.hidden_layer[0](self.hidden_state[h_idx])
+                    new_hidden = self.hidden_layer[1](tmp)
+                    self.hidden_state = self.hidden_state.clone()
+                    self.hidden_state[h_idx] = new_hidden
+                out = self.output_layer(self.hidden_state[h_idx])
                 return out
-            return stack([process_1_input(x[i]) for i in range(x.shape[0])])
-        return stack([process_1_seq(x[i]) for i in range(x.shape[0])]) 
+            return stack([process_1_input(x[i],h_idx) for i in range(x.shape[0])])
+        print("hidden", self.hidden_state)
+        out = stack([process_1_seq(x[i],i) for i in range(x.shape[0])]), self.hidden_state
+        print("hidden after",self.hidden_state)
+        return out
           
         
     def parameters(self):
